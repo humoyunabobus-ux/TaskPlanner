@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Task Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-body: #0f1115; 
+            --bg-card: #16181d; 
+            --bg-input: #0f1115;
+            --bg-item: #1f2229; 
+            --text-main: #e5e7eb; 
+            --text-muted: #6b7280; 
+            --border-color: #2d3139; 
+            
+            --text-accent: #38bdf8; 
+            --color-success: #4ade80; 
+            --color-danger: #f87171; 
+            
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+        }
+
+        body.light-mode {
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --bg-input: #f9fafb;
+            --bg-item: #f3f4f6;
+            --text-main: #111827;
+            --text-muted: #9ca3af;
+            --border-color: #e5e7eb;
+        }
+
+        body.theme-blue { --text-accent: #38bdf8; }
+        body.theme-red { --text-accent: #ef4444; }
+        body.theme-orange { --text-accent: #f97316; }
+        body.theme-yellow { --text-accent: #eab308; }
+        body.theme-green { --text-accent: #22c55e; }
+        body.theme-cyan { --text-accent: #06b6d4; }
+        body.theme-purple { --text-accent: #a855f7; }
+        body.theme-pink { --text-accent: #ec4899; }
+        body.theme-white { --text-accent: #f8fafc; }
+        body.light-mode.theme-white { --text-accent: #0f172a; }
+
+        body {
+            background-color: var(--bg-body); color: var(--text-main);
+            display: flex; justify-content: center; padding: 40px 20px;
+            font-family: var(--font-main); transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid;
+            grid-template-columns: 1.2fr 0.8fr; gap: 30px; padding-bottom: 80px;
+        }
+
+        .app-header {
+            grid-column: 1 / -1; display: flex; justify-content: space-between;
+            align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);
+        }
+
+        .app-logo { font-size: 1.4rem; font-weight: 700; }
+        .app-logo span { color: var(--text-accent); transition: color 0.3s; }
+
+        @media (max-width: 850px) { .container { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--bg-card); padding: 30px; border-radius: 12px;
+            border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        h2 { margin-bottom: 25px; color: var(--text-accent); font-size: 1.6rem; font-weight: 700; transition: color 0.3s; }
+
+        .input-group { display: flex; gap: 10px; margin-bottom: 30px; align-items: center; flex-wrap: wrap; }
+        input[type="time"], input[type="number"], input[type="text"], select {
+            padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color);
+            color: var(--text-main); border-radius: 8px; outline: none; font-size: 1rem;
+        }
+        
+        .time-picker-24 { width: 120px; text-align: center; font-family: var(--font-mono); }
+        .time-picker-12 { display: none; gap: 5px; align-items: center; }
+        .time-picker-12 input { width: 60px; text-align: center; font-family: var(--font-mono); padding: 12px 5px;}
+        .time-picker-12 select { padding: 12px 5px; font-weight: bold; cursor: pointer; }
+        
+        input[type="text"] { flex: 1; min-width: 200px; }
+        input:focus, select:focus { border-color: var(--text-accent); }
+        ::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.8); }
+        body.light-mode ::-webkit-calendar-picker-indicator { filter: invert(0); }
+
+        button {
+            padding: 12px 20px; background-color: transparent; color: var(--text-accent);
+            border: 1px solid var(--text-accent); border-radius: 8px; cursor: pointer;
+            font-size: 1rem; font-weight: 600; transition: all 0.3s;
+        }
+        button:hover { background-color: var(--text-accent); color: var(--bg-card); }
+
+        .mic-btn {
+            padding: 12px; border-radius: 50%; width: 46px; height: 46px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+        .mic-btn.recording { background-color: var(--color-danger); border-color: var(--color-danger); color: white; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(248, 113, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
+        }
+
+        .timeline-wrapper { position: relative; min-height: 50px; }
+        .timeline-line {
+            position: absolute; top: 20px; bottom: 20px; left: 80px;
+            width: 2px; background-color: var(--border-color); z-index: 0;
+        }
+
+        .task-list { list-style: none; position: relative; z-index: 1; }
+        .task-row-container { display: flex; flex-direction: column; margin-bottom: 20px; }
+        .task-row { display: flex; align-items: flex-start; }
+        
+        .task-time-col {
+            width: 70px; padding-top: 15px; font-size: 0.85rem; 
+            color: var(--text-muted); font-family: var(--font-mono);
+            text-align: right; padding-right: 15px;
+        }
+        .task-node {
+            width: 22px; height: 22px; border-radius: 50%;
+            background-color: var(--bg-card); border: 3px solid var(--border-color);
+            margin-top: 12px; margin-right: 20px; position: relative;
+            z-index: 2; transition: all 0.3s; cursor: pointer;
+        }
+        .task-card {
+            flex: 1; background: var(--bg-item); padding: 15px 20px;
+            border-radius: 12px; border: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: all 0.3s; user-select: none;
+        }
+
+        .task-row-container.completed .task-node { border-color: var(--color-success); background-color: var(--color-success); }
+        .task-row-container.completed .task-card { opacity: 0.5; border-color: transparent; }
+        .task-row-container.completed .task-text { text-decoration: line-through; color: var(--text-muted); }
+
+        .task-info { display: flex; flex-direction: column; gap: 5px; flex: 1; cursor: pointer; }
+        .task-text { font-size: 1.05rem; font-weight: 500; display: flex; align-items: center; gap: 8px;}
+        .recurring-icon { color: var(--text-accent); font-size: 1.2rem; }
+
+        .task-actions { display: flex; align-items: center; gap: 10px; }
+        .btn-action { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; }
+        .btn-more { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; padding: 0 5px; }
+        .btn-more:hover { color: var(--text-main); background: none; }
+
+        .task-settings-panel {
+            background: var(--bg-item); border: 1px solid var(--border-color);
+            margin-left: 112px; margin-top: 5px; border-radius: 8px; padding: 12px 15px;
+            display: none; flex-direction: column; gap: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        .settings-panel-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; display: block;}
+        .day-toggles { display: flex; gap: 5px; justify-content: space-between; width: 100%; }
+        .day-btn {
+            flex: 1; padding: 8px 0; border: 1px solid var(--border-color);
+            border-radius: 6px; background: var(--bg-input); color: var(--text-muted);
+            font-size: 0.8rem; cursor: pointer; transition: 0.2s; text-align: center;
+        }
+        .day-btn:hover { border-color: var(--text-accent); color: var(--text-main); }
+        .day-btn.active { background: var(--text-accent); color: var(--bg-body); border-color: var(--text-accent); font-weight: bold; }
+        
+        .everyday-btn { flex: none; width: auto; padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; margin-bottom: 10px;}
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .analytics-container { display: flex; flex-direction: column; align-items: center; }
+        .chart-wrapper { position: relative; width: 250px; height: 250px; margin-bottom: 25px; }
+        .chart-center-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .chart-center-text .percent { font-size: 24px; color: var(--text-accent); font-weight: 700; transition: color 0.3s; }
+        .chart-center-text .subtext { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+        .stats-list { width: 100%; }
+        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 0.9rem; }
+
+        .settings-btn { background: var(--bg-item); color: var(--text-main); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; }
+        .settings-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 1000; display: none; justify-content: center; align-items: center; padding: 20px;
+        }
+        .settings-overlay.open { display: flex; }
+        .settings-content { width: 100%; max-width: 400px; background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;}
+        .settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .close-btn { font-size: 1.5rem; border: none; background: none; color: var(--text-muted); cursor: pointer; padding: 0; }
+        .close-btn:hover { background: none; color: var(--text-accent); }
+        
+        .setting-group { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); border-radius: 34px; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background-color: var(--text-accent); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .theme-selector, .lang-selector, .melody-selector { margin-top: 15px; }
+        .theme-selector select, .lang-selector select, .melody-selector select { width: 100%; padding: 10px; margin-top: 8px; }
+        .notification-btn { width: 100%; margin-top: 20px; border-style: dashed; }
+
+        .calendar-trigger {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--text-accent); color: var(--bg-body); border: none;
+            border-radius: 30px; padding: 12px 25px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 99; transition: all 0.3s;
+        }
+        .calendar-trigger:hover { transform: translateX(-50%) translateY(-5px); }
+        .calendar-sheet {
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 75vh;
+            background: var(--bg-card); border-top-left-radius: 25px; border-top-right-radius: 25px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5); z-index: 1000; transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
+            padding: 30px; display: flex; flex-direction: column; border-top: 1px solid var(--border-color);
+        }
+        .calendar-sheet.open { bottom: 0; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0;}
+        
+        .year-scroll-container {
+            flex: 1; overflow-y: auto; padding-right: 10px;
+            scroll-behavior: smooth;
+        }
+        .month-block { margin-bottom: 30px; }
+        .month-title { font-size: 1.2rem; color: var(--text-accent); margin-bottom: 15px; text-align: center; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; text-align: center; }
+        .cal-day-name { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
+        .cal-date { 
+            padding: 10px; border-radius: 50%; width: 40px; height: 40px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: center; font-weight: 500; cursor: pointer; transition: 0.2s;
+        }
+        .cal-date:hover { background: var(--bg-item); }
+        .cal-date.active { background: var(--text-accent); color: var(--bg-body); box-shadow: 0 0 10px var(--text-accent); }
+        .cal-date.dim { color: var(--border-color); cursor: default; background: none !important; }
+
+        .toast-container { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+        .toast {
+            background: var(--bg-item); border-left: 4px solid var(--text-accent); color: var(--text-main);
+            padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateX(120%); transition: transform 0.3s ease; display: flex; align-items: center; gap: 15px;
+        }
+        .toast.show { transform: translateX(0); }
+
+    </style>
+</head>
+<body class="theme-blue">
+
+<div id="toastContainer" class="toast-container"></div>
+
+<audio id="audio-melody1" src="sounds/melody1.mp3"></audio>
+<audio id="audio-melody2" src="sounds/melody2.mp3"></audio>
+<audio id="audio-melody3" src="sounds/melody3.mp3"></audio>
+<audio id="audio-melody4" src="sounds/melody4.mp3"></audio>
+<audio id="audio-melody5" src="sounds/melody5.mp3"></audio>
+
+<div id="settingsOverlay" class="settings-overlay">
+    <div class="settings-content">
+        <div class="settings-header">
+            <h2 id="t_settings_title">Settings</h2>
+            <button class="close-btn" onclick="toggleSettings()">✖</button>
+        </div>
+        <div class="setting-group">
+            <span id="t_ampm">A.M. / P.M. Format</span>
+            <label class="switch"><input type="checkbox" id="timeFormatToggle" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-group">
+            <span id="t_darkmode">Dark Mode</span>
+            <label class="switch"><input type="checkbox" id="darkModeToggle" checked><span class="slider"></span></label>
+        </div>
+        <div class="lang-selector">
+            <span id="t_language">Language:</span>
+            <select id="langSelect">
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+                <option value="uz">O'zbek</option>
+            </select>
+        </div>
+        <div class="theme-selector">
+            <span id="t_themecolor">Change Theme Color:</span>
+            <select id="themeSelect">
+                <option value="blue">Blue</option>
+                <option value="red">Red</option>
+                <option value="orange">Orange</option>
+                <option value="yellow">Yellow</option>
+                <option value="green">Green</option>
+                <option value="cyan">Cyan</option>
+                <option value="purple">Purple</option>
+                <option value="pink">Pink</option>
+                <option value="white">Minimal (B/W)</option>
+            </select>
+        </div>
+        <div class="melody-selector">
+            <span id="t_melody">Notification Melody:</span>
+            <select id="melodySelect">
+                <option value="audio-melody1">Melody 1</option>
+                <option value="audio-melody2">Melody 2</option>
+                <option value="audio-melody3">Melody 3</option>
+                <option value="audio-melody4">Melody 4</option>
+                <option value="audio-melody5">Melody 5</option>
+            </select>
+        </div>
+        <button class="notification-btn" id="t_osreminders" onclick="requestOSNotifications()">🔔 Enable OS Reminders</button>
+        <button class="notification-btn" id="t_micpermission" onclick="requestMicPermission()" style="margin-top: 10px; border-color: var(--text-accent); color: var(--text-accent);">🎤 Grant Mic Permission</button>
+    </div>
+</div>
+
+<button class="calendar-trigger" id="t_viewcalendar" onclick="toggleCalendar()">📅 View Calendar</button>
+<div id="calendarSheet" class="calendar-sheet">
+    <div class="calendar-header">
+        <h2 id="calendarYearTitle">2026 Calendar</h2>
+        <button class="close-btn" onclick="toggleCalendar()">✖</button>
+    </div>
+    <div class="year-scroll-container" id="yearCalendarContainer"></div>
+</div>
+
+<div class="container">
+    <div class="app-header">
+        <div class="app-logo" id="t_apptitle">Task<span>Planner</span></div>
+        <button class="settings-btn" id="t_settings_btn" onclick="toggleSettings()">⚙️ Settings</button>
+    </div>
+
+    <div class="card">
+        <h2 id="t_plannertitle">Daily Planner</h2>
+        
+        <div class="input-group">
+            <input type="time" id="taskTime24" class="time-picker-24" style="display:none;">
+            
+            <div id="taskTime12" class="time-picker-12">
+                <input type="number" id="taskHour12" min="1" max="12" placeholder="12" oninput="limitInput(this, 12)">
+                <span>:</span>
+                <input type="number" id="taskMin12" min="0" max="59" placeholder="00" oninput="limitInput(this, 59)">
+                <select id="taskAmPm">
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+            </div>
+
+            <input type="text" id="taskInput" placeholder="Add a task...">
+            <button id="micBtn" class="mic-btn" onclick="toggleVoiceInput()" title="Voice Input">🎤</button>
+            <button id="t_addtaskbtn" onclick="addTask()">Add Task</button>
+        </div>
+        
+        <div class="timeline-wrapper">
+            <div class="timeline-line" id="timelineLine" style="display:none;"></div>
+            <div class="task-list" id="taskList"></div>
+        </div>
+    </div>
+
+    <div class="card analytics-container">
+        <h2 id="t_summarytitle">Day Summary</h2>
+        <div class="chart-wrapper">
+            <canvas id="dayChart"></canvas>
+            <div class="chart-center-text">
+                <div class="percent" id="completionPercent">0%</div>
+                <div class="subtext" id="completionStatus">Planning your day...</div>
+            </div>
+        </div>
+        <div class="stats-list" id="statsList"></div>
+    </div>
+</div>
+
+<script>
+    const i18n = {
+        en: {
+            apptitle: "Task<span>Planner</span>", settings_title: "Settings", settings_btn: "⚙️ Settings",
+            plannertitle: "Daily Planner", addtaskbtn: "Add Task", placeholder: "Add a task...",
+            summarytitle: "Day Summary", planning: "Planning your day...", tasksProgress: "Tasks in progress",
+            allDone: "All done!", viewcalendar: "📅 View Calendar", ampm: "A.M. / P.M. Format",
+            darkmode: "Dark Mode", themecolor: "Theme Color:", osreminders: "🔔 Enable OS Reminders",
+            language: "Language:", repeatOn: "Repeat on:", everyday: "Everyday", deleteBtn: "Delete Task",
+            waiting: "Waiting to start", doneLabel: "Done", pendingLabel: "Pending", melody: "Notification Melody:",
+            days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        },
+        ru: {
+            apptitle: "Task<span>Planner</span>", settings_title: "Настройки", settings_btn: "⚙️ Настройки",
+            plannertitle: "План на день", addtaskbtn: "Добавить", placeholder: "Новая задача...",
+            summarytitle: "Итоги дня", planning: "Планируем день...", tasksProgress: "В процессе",
+            allDone: "Всё готово!", viewcalendar: "📅 Календарь", ampm: "Формат АМ/РМ",
+            darkmode: "Темная тема", themecolor: "Цвет темы:", osreminders: "🔔 Уведомления ОС",
+            language: "Язык:", repeatOn: "Повторять по:", everyday: "Каждый день", deleteBtn: "Удалить задачу",
+            waiting: "Ждем начала", doneLabel: "Готово", pendingLabel: "Ожидает", melody: "Мелодия уведомления:",
+            days: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+            months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+        },
+        uz: {
+            apptitle: "Task<span>Planner</span>", settings_title: "Sozlamalar", settings_btn: "⚙️ Sozlamalar",
+            plannertitle: "Kunlik reja", addtaskbtn: "Qo'shish", placeholder: "Vazifa qo'shing...",
+            summarytitle: "Kun xulosasi", planning: "Kun rejalashtirilmoqda...", tasksProgress: "Jarayonda",
+            allDone: "Bajarildi!", viewcalendar: "📅 Kalendar", ampm: "AM/PM formati",
+            darkmode: "Tungi rejim", themecolor: "Mavzu rangi:", osreminders: "🔔 OS eslatmalari",
+            language: "Til:", repeatOn: "Takrorlash:", everyday: "Har kuni", deleteBtn: "O'chirish",
+            waiting: "Boshlanishi kutilmoqda", doneLabel: "Bajarildi", pendingLabel: "Kutilmoqda", melody: "Xabarnoma musiqasi:",
+            days: ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'],
+            months: ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
+        }
+    };
+
+    let allTasks = [];
+    let notifiedTasks = new Set();
+    let chartInstance = null;
+    let is12HourFormat = true; 
+    let isDarkMode = true;
+    let currentLang = 'en';
+    let currentMelody = 'audio-melody1'; 
+
+    const nowObj = new Date();
+    let selectedDateStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth()+1).padStart(2,'0')}-${String(nowObj.getDate()).padStart(2,'0')}`;
+    let timeManuallyChanged = false;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+    let isRecording = false;
+
+    window.onload = function() {
+        if (localStorage.getItem('planner_tasks')) {
+            allTasks = JSON.parse(localStorage.getItem('planner_tasks'));
+        }
+        if (localStorage.getItem('planner_melody')) {
+            currentMelody = localStorage.getItem('planner_melody');
+            document.getElementById('melodySelect').value = currentMelody;
+        }
+
+        initChart();
+        applyLanguage();
+        generateYearCalendar(nowObj.getFullYear());
+        updateTimeInputsVisibility();
+        updateRealTime();
+        renderTasks();
+
+        setInterval(() => { 
+            if(!timeManuallyChanged) updateRealTime(); 
+            checkTaskReminders();
+        }, 1000);
+        
+        const inputs = ['taskTime24', 'taskHour12', 'taskMin12', 'taskAmPm'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('focus', () => timeManuallyChanged = true);
+                el.addEventListener('input', () => timeManuallyChanged = true);
+                el.addEventListener('change', () => timeManuallyChanged = true);
+            }
+        });
+
+        document.getElementById('timeFormatToggle').addEventListener('change', (e) => {
+            is12HourFormat = e.target.checked;
+            updateTimeInputsVisibility();
+            renderTasks();
+        });
+        document.getElementById('darkModeToggle').addEventListener('change', (e) => {
+            isDarkMode = e.target.checked;
+            document.body.classList.toggle('light-mode', !isDarkMode);
+            updateChartColors(); updateAnalytics();
+        });
+        document.getElementById('themeSelect').addEventListener('change', (e) => {
+            document.body.className = document.body.className.replace(/theme-\w+/g, '').trim();
+            document.body.classList.add(`theme-${e.target.value}`);
+            if(!isDarkMode) document.body.classList.add('light-mode');
+            updateChartColors(); updateAnalytics(); 
+        });
+        document.getElementById('langSelect').addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            applyLanguage(); renderTasks(); updateAnalytics(); generateYearCalendar(nowObj.getFullYear());
+        });
+        document.getElementById('melodySelect').addEventListener('change', (e) => {
+            currentMelody = e.target.value;
+            localStorage.setItem('planner_melody', currentMelody);
+            playTaskRingtone(currentMelody); 
+        });
+
+        if (recognition) {
+            recognition.continuous = false;
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                parseAndSetTimeFromSpeech(transcript);
+                toggleVoiceInput(true);
+            };
+            recognition.onerror = () => toggleVoiceInput(true);
+            recognition.onend = () => toggleVoiceInput(true);
+        }
+    };
+
+    function showToast(message, icon = "⏰") {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${message}</span>`;
+        container.appendChild(toast);
+        
+        requestAnimationFrame(() => { toast.classList.add('show'); });
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+
+    function playTaskRingtone(ringtoneId) {
+        try {
+            const allAudios = document.querySelectorAll('audio');
+            allAudios.forEach(a => {
+                a.pause();
+                a.currentTime = 0;
+            });
+
+            let audioToPlay = document.getElementById(ringtoneId);
+            if(!audioToPlay) {
+                audioToPlay = document.getElementById('audio-melody1');
+            }
+
+            if(audioToPlay) {
+                audioToPlay.currentTime = 0; 
+                audioToPlay.play().catch(e => console.log("Audio waiting for user interaction or path not found", e));
+            }
+        } catch(error) {
+            console.error("Audio playback error:", error);
+        }
+    }
+
+    function checkTaskReminders() {
+        const d = new Date();
+        const hrs = d.getHours();
+        const mins = d.getMinutes();
+        const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        
+        if (selectedDateStr !== todayStr) return; 
+
+        const tasks = getTasksForCurrentDay();
+        tasks.forEach(task => {
+            if (!task.completed && !notifiedTasks.has(task.id)) {
+                let taskH = task.rawHour;
+                if (task.ampm === 'PM' && taskH < 12) taskH += 12;
+                if (task.ampm === 'AM' && taskH === 12) taskH = 0;
+                
+                if (taskH === hrs && task.rawMin === mins) {
+                    playTaskRingtone(currentMelody);
+                    showToast(`Time for: ${task.text}`, "⏰");
+                    notifiedTasks.add(task.id);
+                    
+                    if (Notification.permission === "granted") {
+                        new Notification("Task Reminder", { body: task.text });
+                    }
+                }
+            }
+        });
+    }
+
+    function initChart() {
+        const ctx = document.getElementById('dayChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: ['Completed', 'Pending'], datasets: [{ data: [0, 100], backgroundColor: ['#38bdf8', '#2d3139'], borderWidth: 0 }] },
+            options: { cutout: '80%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+        });
+    }
+
+    function updateChartColors() {
+        if(!chartInstance) return;
+        const accentColor = getComputedStyle(document.body).getPropertyValue('--text-accent').trim();
+        const borderColor = getComputedStyle(document.body).getPropertyValue('--border-color').trim();
+        chartInstance.data.datasets[0].backgroundColor = [accentColor, borderColor];
+        chartInstance.update();
+    }
+
+    function limitInput(el, max) {
+        if (parseInt(el.value) > max) el.value = max;
+        if (parseInt(el.value) < 0) el.value = 0;
+    }
+
+    function updateTimeInputsVisibility() {
+        const t24 = document.getElementById('taskTime24');
+        const t12 = document.getElementById('taskTime12');
+        if (is12HourFormat) {
+            t24.style.display = 'none';
+            t12.style.display = 'flex';
+        } else {
+            t24.style.display = 'block';
+            t12.style.display = 'none';
+        }
+    }
+
+    function updateRealTime() {
+        const d = new Date();
+        if (is12HourFormat) {
+            let h = d.getHours();
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            h = h ? h : 12;
+            document.getElementById('taskHour12').value = String(h).padStart(2, '0');
+            document.getElementById('taskMin12').value = String(d.getMinutes()).padStart(2, '0');
+            document.getElementById('taskAmPm').value = ampm;
+        } else {
+            document.getElementById('taskTime24').value = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        }
+    }
+
+    function getTasksForCurrentDay() {
+        const d = new Date(selectedDateStr);
+        const dayOfWeek = d.getDay();
+        return allTasks.filter(t => t.date === selectedDateStr || (t.repeatDays && t.repeatDays.includes(dayOfWeek)));
+    }
+
+    function addTask() {
+        const input = document.getElementById('taskInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        let rawHour = 0, rawMin = 0, ampm = '';
+        if (is12HourFormat) {
+            rawHour = parseInt(document.getElementById('taskHour12').value) || 12;
+            rawMin = parseInt(document.getElementById('taskMin12').value) || 0;
+            ampm = document.getElementById('taskAmPm').value;
+        } else {
+            const val = document.getElementById('taskTime24').value || "00:00";
+            const parts = val.split(':');
+            rawHour = parseInt(parts[0]);
+            rawMin = parseInt(parts[1]);
+        }
+
+        const newTask = {
+            id: Date.now(),
+            text: text,
+            rawHour: rawHour,
+            rawMin: rawMin,
+            ampm: ampm,
+            completed: false,
+            date: selectedDateStr,
+            repeatDays: []
+        };
+
+        allTasks.push(newTask);
+        saveTasks();
+        input.value = '';
+        timeManuallyChanged = false;
+        updateRealTime();
+        renderTasks();
+        updateAnalytics();
+    }
+
+    function saveTasks() {
+        localStorage.setItem('planner_tasks', JSON.stringify(allTasks));
+    }
+
+    function renderTasks() {
+        const list = document.getElementById('taskList');
+        const line = document.getElementById('timelineLine');
+        list.innerHTML = '';
+        
+        const tasks = getTasksForCurrentDay();
+        if (tasks.length === 0) {
+            line.style.display = 'none';
+            return;
+        }
+        line.style.display = 'block';
+
+        tasks.sort((a,b) => {
+            let hA = a.rawHour;
+            if (a.ampm === 'PM' && hA < 12) hA += 12;
+            if (a.ampm === 'AM' && hA === 12) hA = 0;
+            let hB = b.rawHour;
+            if (b.ampm === 'PM' && hB < 12) hB += 12;
+            if (b.ampm === 'AM' && hB === 12) hB = 0;
+            return (hA * 60 + a.rawMin) - (hB * 60 + b.rawMin);
+        });
+
+        tasks.forEach(task => {
+            const rowContainer = document.createElement('div');
+            rowContainer.className = `task-row-container ${task.completed ? 'completed' : ''}`;
+            
+            let displayTime = '';
+            if (is12HourFormat) {
+                displayTime = `${String(task.rawHour).padStart(2,'0')}:${String(task.rawMin).padStart(2,'0')} ${task.ampm || ''}`;
+            } else {
+                let h = task.rawHour;
+                if (task.ampm === 'PM' && h < 12) h += 12;
+                if (task.ampm === 'AM' && h === 12) h = 0;
+                displayTime = `${String(h).padStart(2,'0')}:${String(task.rawMin).padStart(2,'0')}`;
+            }
+
+            const isRecurring = task.repeatDays && task.repeatDays.length > 0;
+
+            rowContainer.innerHTML = `
+                <div class="task-row">
+                    <div class="task-time-col">${displayTime}</div>
+                    <div class="task-node" onclick="toggleTaskComplete(${task.id})"></div>
+                    <div class="task-card">
+                        <div class="task-info" onclick="toggleTaskComplete(${task.id})">
+                            <div class="task-text">
+                                ${isRecurring ? '<span class="recurring-icon">🔁</span>' : ''}
+                                ${task.text}
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="btn-more" onclick="toggleTaskSettings(${task.id})">•••</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="task-settings-panel" id="settings-${task.id}">
+                    <span class="settings-panel-title">${i18n[currentLang].repeatOn}</span>
+                    <button class="day-btn everyday-btn" onclick="toggleEveryday(${task.id})">${i18n[currentLang].everyday}</button>
+                    <div class="day-toggles">
+                        ${i18n[currentLang].days.map((day, idx) => {
+                            const active = task.repeatDays && task.repeatDays.includes(idx) ? 'active' : '';
+                            return `<button class="day-btn ${active}" onclick="toggleTaskDay(${task.id}, ${idx})">${day}</button>`;
+                        }).join('')}
+                    </div>
+                    <button class="btn-action" style="border-color:var(--color-danger); color:var(--color-danger); margin-top:10px;" onclick="deleteTask(${task.id})">${i18n[currentLang].deleteBtn}</button>
+                </div>
+            `;
+            list.appendChild(rowContainer);
+        });
+    }
+
+    function toggleTaskComplete(id) {
+        const task = allTasks.find(t => t.id === id);
+        if (task) {
+            task.completed = !task.completed;
+            if(!task.completed) notifiedTasks.delete(id);
+            saveTasks();
+            renderTasks();
+            updateAnalytics();
+        }
+    }
+
+    function deleteTask(id) {
+        allTasks = allTasks.filter(t => t.id !== id);
+        notifiedTasks.delete(id);
+        saveTasks();
+        renderTasks();
+        updateAnalytics();
+    }
+
+    function toggleTaskSettings(id) {
+        const panel = document.getElementById(`settings-${id}`);
+        if (panel) {
+            panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+        }
+    }
+
+    function toggleTaskDay(id, dayIdx) {
+        const task = allTasks.find(t => t.id === id);
+        if (task) {
+            if (!task.repeatDays) task.repeatDays = [];
+            const index = task.repeatDays.indexOf(dayIdx);
+            if (index > -1) {
+                task.repeatDays.splice(index, 1);
+            } else {
+                task.repeatDays.push(dayIdx);
+            }
+            saveTasks();
+            renderTasks();
+        }
+    }
+
+    function toggleEveryday(id) {
+        const task = allTasks.find(t => t.id === id);
+        if (task) {
+            if (!task.repeatDays) task.repeatDays = [];
+            if (task.repeatDays.length === 7) {
+                task.repeatDays = [];
+            } else {
+                task.repeatDays = [0, 1, 2, 3, 4, 5, 6];
+            }
+            saveTasks();
+            renderTasks();
+        }
+    }
+
+    function updateAnalytics() {
+        const tasks = getTasksForCurrentDay();
+        const completed = tasks.filter(t => t.completed).length;
+        const total = tasks.length;
+        const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        document.getElementById('completionPercent').innerText = `${percent}%`;
+        
+        const statusEl = document.getElementById('completionStatus');
+        if (total === 0) {
+            statusEl.innerText = i18n[currentLang].planning;
+        } else if (percent === 100) {
+            statusEl.innerText = i18n[currentLang].allDone;
+        } else {
+            statusEl.innerText = i18n[currentLang].tasksProgress;
+        }
+
+        if (chartInstance) {
+            chartInstance.data.datasets[0].data = [percent, 100 - percent];
+            updateChartColors();
+        }
+
+        const statsList = document.getElementById('statsList');
+        statsList.innerHTML = `
+            <div class="stat-row"><span>${i18n[currentLang].doneLabel}</span><span style="color:var(--color-success)">${completed}</span></div>
+            <div class="stat-row"><span>${i18n[currentLang].pendingLabel}</span><span style="color:var(--text-accent)">${total - completed}</span></div>
+        `;
+    }
+
+    function applyLanguage() {
+        const langData = i18n[currentLang];
+        document.getElementById('t_apptitle').innerHTML = langData.apptitle;
+        document.getElementById('t_settings_title').innerText = langData.settings_title;
+        document.getElementById('t_settings_btn').innerText = langData.settings_btn;
+        document.getElementById('t_plannertitle').innerText = langData.plannertitle;
+        document.getElementById('t_addtaskbtn').innerText = langData.addtaskbtn;
+        document.getElementById('taskInput').placeholder = langData.placeholder;
+        document.getElementById('t_summarytitle').innerText = langData.summarytitle;
+        document.getElementById('t_viewcalendar').innerText = langData.viewcalendar;
+        document.getElementById('t_ampm').innerText = langData.ampm;
+        document.getElementById('t_darkmode').innerText = langData.darkmode;
+        document.getElementById('t_themecolor').innerText = langData.themecolor;
+        document.getElementById('t_language').innerText = langData.language;
+        document.getElementById('t_melody').innerText = langData.melody;
+        document.getElementById('calendarYearTitle').innerText = `${nowObj.getFullYear()} Calendar`;
+    }
+
+    function toggleSettings() {
+        document.getElementById('settingsOverlay').classList.toggle('open');
+    }
+
+    function toggleCalendar() {
+        document.getElementById('calendarSheet').classList.toggle('open');
+    }
+
+    function generateYearCalendar(year) {
+        const container = document.getElementById('yearCalendarContainer');
+        container.innerHTML = '';
+        const langData = i18n[currentLang];
+
+        for (let m = 0; m < 12; m++) {
+            const monthBlock = document.createElement('div');
+            monthBlock.className = 'month-block';
+            
+            const title = document.createElement('div');
+            title.className = 'month-title';
+            title.innerText = langData.months[m];
+            monthBlock.appendChild(title);
+
+            const grid = document.createElement('div');
+            grid.className = 'calendar-grid';
+
+            langData.days.forEach(day => {
+                const dName = document.createElement('div');
+                dName.className = 'cal-day-name';
+                dName.innerText = day;
+                grid.appendChild(dName);
+            });
+
+            const firstDay = new Date(year, m, 1).getDay();
+            const daysInMonth = new Date(year, m + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'cal-date dim';
+                grid.appendChild(empty);
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateEl = document.createElement('div');
+                dateEl.className = 'cal-date';
+                dateEl.innerText = d;
+                
+                const currentStr = `${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                if (currentStr === selectedDateStr) {
+                    dateEl.classList.add('active');
+                }
+
+                dateEl.onclick = () => {
+                    selectedDateStr = currentStr;
+                    document.querySelectorAll('.cal-date').forEach(el => el.classList.remove('active'));
+                    dateEl.classList.add('active');
+                    renderTasks();
+                    updateAnalytics();
+                    toggleCalendar();
+                };
+
+                grid.appendChild(dateEl);
+            }
+
+            monthBlock.appendChild(grid);
+            container.appendChild(monthBlock);
+        }
+    }
+
+    function toggleVoiceInput(forceStop) {
+        if (!recognition) return;
+        const btn = document.getElementById('micBtn');
+        if (isRecording || forceStop) {
+            recognition.stop();
+            isRecording = false;
+            btn.classList.remove('recording');
+        } else {
+            try {
+                recognition.start();
+                isRecording = true;
+                btn.classList.add('recording');
+            } catch(e) { console.error(e); }
+        }
+    }
+
+    function parseAndSetTimeFromSpeech(transcript) {
+        document.getElementById('taskInput').value = transcript;
+    }
+
+    function requestOSNotifications() {
+        Notification.requestPermission().then(permission => {
+            if(permission === 'granted') showToast("Notifications enabled!", "🔔");
+        });
+    }
+
+    function requestMicPermission() {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(() => showToast("Microphone permission granted!", "🎤"))
+            .catch(() => showToast("Microphone permission denied.", "❌"));
+    }
+</script>
+</body>
+</html>

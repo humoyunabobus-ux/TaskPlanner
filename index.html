@@ -317,6 +317,22 @@
     <div class="year-scroll-container" id="yearCalendarContainer"></div>
 </div>
 
+<script> 
+function toggleCalendar() {
+    const sheet = document.getElementById('calendarSheet');
+    sheet.classList.toggle('open');
+    
+    if (sheet.classList.contains('open')) {
+        const currentMonth = new Date().getMonth();
+        const monthElement = document.getElementById(`month-${currentMonth}`);
+        if (monthElement) {
+            setTimeout(() => {
+                monthElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150); 
+        }
+    }
+}    
+
 <div class="container">
     <div class="app-header">
         <div class="app-logo" id="t_apptitle">Task<span>Planner</span></div>

@@ -3,48 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Planner</title>
-    <!-- Chart.js for Analytics -->
+    <title>Task Planner | Mind & Body Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-primary: #f4f6f8;
+            --bg-primary: #f8fafc;
             --bg-card: #ffffff;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --text-accent: #3b82f6;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
             --color-accent: #3b82f6;
             --color-success: #10b981;
             --color-danger: #ef4444;
-            --border-color: #e5e7eb;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --radius-md: 12px;
-            --radius-lg: 18px;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
+            --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         body.dark-mode {
-            --bg-primary: #0f172a;
-            --bg-card: #1e293b;
-            --text-primary: #f8fafc;
+            --bg-primary: #0b0f17;
+            --bg-card: #161e2e;
+            --text-primary: #f1f5f9;
             --text-secondary: #94a3b8;
-            --border-color: #334155;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+            --border-color: #26334d;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            transition: background-color 0.25s var(--ease-out), color 0.25s var(--ease-out), border-color 0.25s var(--ease-out);
         }
 
         body {
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            padding: 20px;
+            padding: 24px;
             display: flex;
             justify-content: center;
             min-height: 100vh;
@@ -58,54 +57,50 @@
             gap: 24px;
         }
 
-        @media (max-width: 820px) {
-            .app-container {
-                grid-template-columns: 1fr;
-            }
+        @media (max-width: 840px) {
+            .app-container { grid-template-columns: 1fr; }
         }
 
-        /* App Header */
+        /* Header */
         .app-header {
             grid-column: 1 / -1;
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: var(--bg-card);
-            padding: 16px 24px;
+            padding: 18px 28px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
         }
 
         .app-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
-        .header-actions {
-            display: flex;
-            gap: 10px;
-        }
+        .header-actions { display: flex; gap: 10px; }
 
         /* Buttons */
         .btn {
             background: var(--bg-primary);
             color: var(--text-primary);
             border: 1px solid var(--border-color);
-            padding: 8px 14px;
-            border-radius: 8px;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 0.9rem;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            transform: scale(1);
+            transition: transform 0.15s var(--ease-out), border-color 0.2s;
         }
 
-        .btn:hover {
-            border-color: var(--color-accent);
-        }
+        .btn:active { transform: scale(0.96); }
+        .btn:hover { border-color: var(--color-accent); }
 
         .btn-primary {
             background: var(--color-accent);
@@ -113,74 +108,78 @@
             border: none;
         }
 
-        .btn-primary:hover {
-            opacity: 0.9;
-        }
+        .btn-primary:hover { opacity: 0.92; }
 
-        /* Cards Layout */
+        /* Card Container */
         .card {
             background: var(--bg-card);
-            padding: 20px;
+            padding: 24px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
             margin-bottom: 20px;
         }
 
         .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 16px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
         }
 
-        /* Add Task Form */
+        /* Input Bar */
         .add-task-form {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .input-text {
             flex: 1;
-            min-width: 200px;
-            padding: 10px 14px;
-            border-radius: 8px;
+            min-width: 220px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
             border: 1px solid var(--border-color);
             background: var(--bg-primary);
             color: var(--text-primary);
             outline: none;
+            font-size: 0.95rem;
         }
 
+        .input-text:focus { border-color: var(--color-accent); }
+
         .input-time, .input-select {
-            padding: 10px;
-            border-radius: 8px;
+            padding: 12px;
+            border-radius: var(--radius-md);
             border: 1px solid var(--border-color);
             background: var(--bg-primary);
             color: var(--text-primary);
             outline: none;
+            font-weight: 600;
         }
 
         .mic-btn {
             background: var(--bg-primary);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
             cursor: pointer;
+            font-size: 1rem;
         }
 
         .mic-btn.recording {
             background: var(--color-danger);
             color: white;
-            animation: pulse 1s infinite;
+            animation: pulse 1.2s infinite ease-in-out;
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
         }
 
-        /* Task List Timeline */
+        /* Timeline & Animated Tasks */
         .timeline-container {
             position: relative;
             padding-left: 20px;
@@ -189,8 +188,8 @@
         .timeline-line {
             position: absolute;
             left: 85px;
-            top: 10px;
-            bottom: 10px;
+            top: 15px;
+            bottom: 15px;
             width: 2px;
             background: var(--border-color);
         }
@@ -198,6 +197,12 @@
         .task-row-container {
             position: relative;
             margin-bottom: 16px;
+            animation: fadeInTask 0.35s var(--ease-out);
+        }
+
+        @keyframes fadeInTask {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .task-row {
@@ -209,83 +214,95 @@
         .task-time-col {
             width: 70px;
             font-size: 0.85rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-secondary);
             text-align: right;
         }
 
         .task-node {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background: var(--color-accent);
-            border: 2px solid var(--bg-card);
+            border: 3px solid var(--bg-card);
+            box-shadow: 0 0 0 2px var(--color-accent);
             z-index: 1;
             cursor: pointer;
+            transition: transform 0.2s var(--ease-out), background 0.2s;
         }
+
+        .task-node:hover { transform: scale(1.3); }
 
         .task-row-container.completed .task-node {
             background: var(--color-success);
+            box-shadow: 0 0 0 2px var(--color-success);
         }
 
         .task-card {
             flex: 1;
             background: var(--bg-primary);
-            padding: 12px 16px;
+            padding: 14px 18px;
             border-radius: var(--radius-md);
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: 1px solid var(--border-color);
+            transition: transform 0.2s var(--ease-out), border-color 0.2s;
+        }
+
+        .task-card:hover {
+            transform: translateX(4px);
+            border-color: var(--color-accent);
         }
 
         .task-row-container.completed .task-text {
             text-decoration: line-through;
             color: var(--text-secondary);
+            opacity: 0.7;
         }
 
-        .task-info {
-            cursor: pointer;
-            flex: 1;
-        }
-
-        .recurring-icon {
-            margin-right: 6px;
-            font-size: 0.85rem;
-        }
+        .task-info { cursor: pointer; flex: 1; }
+        .task-text { font-size: 0.95rem; font-weight: 500; line-height: 1.4; }
 
         .btn-more {
             background: none;
             border: none;
             color: var(--text-secondary);
             cursor: pointer;
-            padding: 4px 8px;
-            font-size: 1.1rem;
+            padding: 6px 10px;
+            font-size: 1.2rem;
+            border-radius: 6px;
         }
 
-        /* Task Edit Panel */
+        .btn-more:hover { background: var(--border-color); }
+
+        /* Task Edit Panel Slide Down */
         .task-settings-panel {
             display: none;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            padding: 12px;
+            padding: 14px;
             border-radius: var(--radius-md);
-            margin-top: 8px;
+            margin-top: 10px;
             margin-left: 100px;
+            box-shadow: var(--shadow-sm);
+            animation: expandPanel 0.25s var(--ease-out);
         }
 
-        .day-toggles {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
+        @keyframes expandPanel {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+
+        .day-toggles { display: flex; gap: 6px; flex-wrap: wrap; }
 
         .day-btn {
-            padding: 4px 8px;
+            padding: 6px 10px;
             font-size: 0.75rem;
-            border-radius: 6px;
+            font-weight: 600;
+            border-radius: 8px;
             border: 1px solid var(--border-color);
             background: var(--bg-primary);
             color: var(--text-primary);
@@ -298,10 +315,7 @@
             border-color: var(--color-accent);
         }
 
-        .everyday-btn {
-            width: 100%;
-            margin-bottom: 4px;
-        }
+        .everyday-btn { width: 100%; margin-bottom: 4px; }
 
         /* Analytics Sidebar */
         .analytics-container {
@@ -312,9 +326,9 @@
 
         .chart-box {
             position: relative;
-            width: 180px;
-            height: 180px;
-            margin: 10px 0;
+            width: 190px;
+            height: 190px;
+            margin: 12px 0;
         }
 
         .chart-percent {
@@ -322,96 +336,110 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.6rem;
+            font-weight: 800;
         }
 
         .stat-row {
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 1px dashed var(--border-color);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
-        /* Slide-up Calendar & Settings Overlay */
+        /* Smooth Slide-up Overlay Sheets */
         .sheet-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            visibility: hidden;
+            display: flex;
             justify-content: center;
             align-items: flex-end;
             z-index: 100;
+            transition: opacity 0.3s var(--ease-out), visibility 0.3s var(--ease-out);
         }
 
         .sheet-overlay.open {
-            display: flex;
+            opacity: 1;
+            visibility: visible;
         }
 
         .sheet-content {
             background: var(--bg-card);
             width: 100%;
-            max-width: 600px;
-            max-height: 80vh;
+            max-width: 650px;
+            max-height: 85vh;
             border-top-left-radius: var(--radius-lg);
             border-top-right-radius: var(--radius-lg);
-            padding: 24px;
+            padding: 28px;
             overflow-y: auto;
             position: relative;
-            animation: slideUp 0.3s ease-out;
+            transform: translateY(100%);
+            transition: transform 0.4s var(--ease-out);
+            box-shadow: var(--shadow-md);
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
+        .sheet-overlay.open .sheet-content {
+            transform: translateY(0);
         }
 
         .sheet-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             position: sticky;
             top: 0;
             background: var(--bg-card);
-            padding-bottom: 10px;
+            padding-bottom: 12px;
             z-index: 10;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .month-block {
-            margin-bottom: 24px;
+            margin-bottom: 28px;
+            scroll-margin-top: 80px;
         }
 
         .month-title {
-            font-weight: 700;
-            margin-bottom: 10px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 12px;
             color: var(--color-accent);
         }
 
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
+            gap: 8px;
             text-align: center;
         }
 
         .cal-day-name {
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-secondary);
+            padding-bottom: 4px;
         }
 
         .cal-date {
-            padding: 8px 0;
-            font-size: 0.85rem;
-            border-radius: 6px;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 8px;
             cursor: pointer;
+            transition: background 0.15s, transform 0.15s;
         }
 
         .cal-date:hover {
             background: var(--bg-primary);
+            transform: scale(1.05);
         }
 
         .cal-date.active {
@@ -424,35 +452,35 @@
             cursor: default;
         }
 
-        /* Settings Form Grid */
         .setting-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
+            padding: 14px 0;
             border-bottom: 1px solid var(--border-color);
+            font-weight: 500;
         }
 
-        /* Toast Alerts */
         .toast {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 24px;
+            right: 24px;
             background: var(--text-primary);
             color: var(--bg-primary);
-            padding: 10px 18px;
-            border-radius: 8px;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
             box-shadow: var(--shadow-md);
             font-size: 0.9rem;
+            font-weight: 600;
             z-index: 200;
             display: none;
+            animation: fadeInTask 0.3s var(--ease-out);
         }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- Header -->
     <header class="app-header">
         <div class="app-title" id="t_apptitle">Task Planner ⚡</div>
         <div class="header-actions">
@@ -461,7 +489,6 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
     <main>
         <div class="card">
             <h2 class="card-title" id="t_plannertitle">Daily Schedule</h2>
@@ -485,7 +512,6 @@
         </div>
     </main>
 
-    <!-- Analytics Sidebar -->
     <aside>
         <div class="card analytics-container">
             <h2 class="card-title" id="t_summarytitle">Daily Summary</h2>
@@ -493,7 +519,7 @@
                 <canvas id="completionChart"></canvas>
                 <div class="chart-percent" id="completionPercent">0%</div>
             </div>
-            <div id="completionStatus" style="font-weight: 600; margin-bottom: 12px;">Tasks in progress</div>
+            <div id="completionStatus" style="font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">Tasks in progress</div>
             <div id="statsList" style="width: 100%;"></div>
         </div>
     </aside>
@@ -503,14 +529,14 @@
 <div class="sheet-overlay" id="calendarSheet">
     <div class="sheet-content">
         <div class="sheet-header">
-            <h3 id="calendarYearTitle">2026 Calendar</h3>
+            <h3 id="calendarYearTitle">Calendar</h3>
             <button class="btn" onclick="toggleCalendar()">✕</button>
         </div>
         <div id="yearCalendarContainer"></div>
     </div>
 </div>
 
-<!-- Settings Overlay -->
+<!-- Settings Sheet -->
 <div class="sheet-overlay" id="settingsOverlay">
     <div class="sheet-content">
         <div class="sheet-header">
@@ -537,18 +563,16 @@
                 <option value="uz">O'zbekcha</option>
             </select>
         </div>
-        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 10px;">
             <button class="btn" onclick="requestOSNotifications()">Enable Notifications 🔔</button>
             <button class="btn" onclick="requestMicPermission()">Grant Microphone Permission 🎤</button>
         </div>
     </div>
 </div>
 
-<!-- Toast Box -->
 <div class="toast" id="toastBox"></div>
 
 <script>
-    // --- Application State ---
     let currentLang = localStorage.getItem('planner_lang') || 'en';
     let isDarkMode = localStorage.getItem('planner_dark') === 'true';
     let themeColor = localStorage.getItem('planner_color') || '#3b82f6';
@@ -559,18 +583,17 @@
     let recognition = null;
     let notifiedTasks = new Set();
 
-    // Default tasks pre-loaded if local storage is empty
+    // Default Mind & Body Routine Preloaded
     let storedTasks = localStorage.getItem('planner_tasks');
     let allTasks = storedTasks ? JSON.parse(storedTasks) : [
-        { id: 1001, text: "Posture Alignment & Stretching", rawHour: 7, rawMin: 0, ampm: "AM", repeatDays: [0,1,2,3,4,5,6], completed: false },
-        { id: 1002, text: "Mindful Language Practice", rawHour: 7, rawMin: 30, ampm: "AM", repeatDays: [0,1,2,3,4,5,6], completed: false },
-        { id: 1003, text: "Deep Work (Prioritize Hard Tasks)", rawHour: 8, rawMin: 30, ampm: "AM", repeatDays: [1,2,3,4,5], completed: false },
-        { id: 1004, text: "Cardio Fitness Session", rawHour: 5, rawMin: 0, ampm: "PM", repeatDays: [0,1,2,3,4,5,6], completed: false },
-        { id: 1005, text: "Mental Agility Practice", rawHour: 9, rawMin: 0, ampm: "PM", repeatDays: [0,1,2,3,4,5,6], completed: false },
-        { id: 1006, text: "Wind Down (Lofi Music & Band Sync)", rawHour: 10, rawMin: 0, ampm: "PM", repeatDays: [0,1,2,3,4,5,6], completed: false }
+        { id: 1001, text: "🧘 Posture Reset (Pelvic Tilt Alignment, Cat-Cow & Chin Tucks)", rawHour: 7, rawMin: 0, ampm: "AM", repeatDays: [0,1,2,3,4,5,6], completed: false },
+        { id: 1002, text: "🗣️ Active Language Recall & Speaking Practice", rawHour: 7, rawMin: 30, ampm: "AM", repeatDays: [0,1,2,3,4,5,6], completed: false },
+        { id: 1003, text: "🧠 Deep Work Block (Focus Zone & Core Tasks)", rawHour: 8, rawMin: 30, ampm: "AM", repeatDays: [1,2,3,4,5], completed: false },
+        { id: 1004, text: "💃 Dance Cardio & Body Workout Session", rawHour: 5, rawMin: 0, ampm: "PM", repeatDays: [0,1,2,3,4,5,6], completed: false },
+        { id: 1005, text: "♟️ Mental Agility (Chess Logic & Math Puzzles)", rawHour: 8, rawMin: 30, ampm: "PM", repeatDays: [0,1,2,3,4,5,6], completed: false },
+        { id: 1006, text: "🌙 Wind Down (Post Stretch, Lofi Music & Smart Band Sync)", rawHour: 10, rawMin: 0, ampm: "PM", repeatDays: [0,1,2,3,4,5,6], completed: false }
     ];
 
-    // --- Translations (i18n) ---
     const i18n = {
         en: {
             apptitle: "Task Planner ⚡",
@@ -585,7 +608,6 @@
             darkmode: "Dark Mode",
             themecolor: "Theme Color",
             language: "Language",
-            melody: "Notification Sound",
             repeatOn: "Repeat on:",
             everyday: "Everyday",
             deleteBtn: "Delete Task",
@@ -610,7 +632,6 @@
             darkmode: "Темная тема",
             themecolor: "Цвет темы",
             language: "Язык",
-            melody: "Звук уведомления",
             repeatOn: "Повторять по:",
             everyday: "Каждый день",
             deleteBtn: "Удалить задачу",
@@ -635,7 +656,6 @@
             darkmode: "Tungi rejim",
             themecolor: "Mavzu rangi",
             language: "Til",
-            melody: "Bildirishnoma ovozi",
             repeatOn: "Takrorlash:",
             everyday: "Har kuni",
             deleteBtn: "O'chirish",
@@ -649,7 +669,6 @@
         }
     };
 
-    // --- Core Initialization ---
     window.onload = () => {
         if (isDarkMode) document.body.classList.add('dark-mode');
         document.getElementById('darkModeToggle').checked = isDarkMode;
@@ -665,7 +684,6 @@
         updateAnalytics();
         initSpeechRecognition();
         
-        // Notification check interval
         setInterval(checkTaskNotifications, 30000);
     };
 
@@ -734,7 +752,7 @@
                     <div class="task-card">
                         <div class="task-info" onclick="toggleTaskComplete(${task.id})">
                             <div class="task-text">
-                                ${isRecurring ? '<span class="recurring-icon">🔁</span>' : ''}
+                                ${isRecurring ? '<span style="margin-right:6px;">🔁</span>' : ''}
                                 ${task.text}
                             </div>
                         </div>
@@ -744,7 +762,7 @@
                     </div>
                 </div>
                 <div class="task-settings-panel" id="settings-${task.id}">
-                    <span style="font-size:0.8rem; font-weight:600;">${i18n[currentLang].repeatOn}</span>
+                    <span style="font-size:0.8rem; font-weight:700;">${i18n[currentLang].repeatOn}</span>
                     <button class="day-btn everyday-btn" onclick="toggleEveryday(${task.id})">${i18n[currentLang].everyday}</button>
                     <div class="day-toggles">
                         ${i18n[currentLang].days.map((day, idx) => {
@@ -752,7 +770,7 @@
                             return `<button class="day-btn ${active}" onclick="toggleTaskDay(${task.id}, ${idx})">${day}</button>`;
                         }).join('')}
                     </div>
-                    <button class="btn" style="border-color:var(--color-danger); color:var(--color-danger); margin-top:8px;" onclick="deleteTask(${task.id})">${i18n[currentLang].deleteBtn}</button>
+                    <button class="btn" style="border-color:var(--color-danger); color:var(--color-danger); margin-top:6px;" onclick="deleteTask(${task.id})">${i18n[currentLang].deleteBtn}</button>
                 </div>
             `;
             list.appendChild(rowContainer);
@@ -831,7 +849,6 @@
         }
     }
 
-    // --- Analytics Chart ---
     function setupChart() {
         const ctx = document.getElementById('completionChart').getContext('2d');
         chartInstance = new Chart(ctx, {
@@ -839,12 +856,12 @@
             data: {
                 datasets: [{
                     data: [0, 100],
-                    backgroundColor: [themeColor, '#e5e7eb'],
+                    backgroundColor: [themeColor, '#e2e8f0'],
                     borderWidth: 0
                 }]
             },
             options: {
-                cutout: '78%',
+                cutout: '80%',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false }, tooltip: { enabled: false } }
@@ -873,26 +890,28 @@
 
         const statsList = document.getElementById('statsList');
         statsList.innerHTML = `
-            <div class="stat-row"><span>${i18n[currentLang].doneLabel}</span><span style="color:var(--color-success)">${completed}</span></div>
-            <div class="stat-row"><span>${i18n[currentLang].pendingLabel}</span><span style="color:var(--text-accent)">${total - completed}</span></div>
+            <div class="stat-row"><span>${i18n[currentLang].doneLabel}</span><span style="color:var(--color-success); font-weight:700;">${completed}</span></div>
+            <div class="stat-row"><span>${i18n[currentLang].pendingLabel}</span><span style="color:var(--color-accent); font-weight:700;">${total - completed}</span></div>
         `;
     }
 
-    // --- Calendar Sheet & Auto-Scroll Feature ---
+    /* Modern Calendar Auto-scroll to Current Month */
     function toggleCalendar() {
         const sheet = document.getElementById('calendarSheet');
-        sheet.classList.toggle('open');
+        const isOpen = sheet.classList.contains('open');
 
-        // Automatically scroll down to the current month when opened
-        if (sheet.classList.contains('open')) {
+        if (!isOpen) {
+            sheet.classList.add('open');
             const currentMonthIndex = new Date().getMonth();
             const monthBlocks = document.querySelectorAll('.month-block');
             
             if (monthBlocks && monthBlocks[currentMonthIndex]) {
                 setTimeout(() => {
                     monthBlocks[currentMonthIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
+                }, 200);
             }
+        } else {
+            sheet.classList.remove('open');
         }
     }
 
@@ -955,7 +974,6 @@
         }
     }
 
-    // --- Settings handlers ---
     function toggleSettings() {
         document.getElementById('settingsOverlay').classList.toggle('open');
     }
@@ -975,7 +993,6 @@
     function changeThemeColor(color, save = true) {
         themeColor = color;
         document.documentElement.style.setProperty('--color-accent', color);
-        document.documentElement.style.setProperty('--text-accent', color);
         if (save) localStorage.setItem('planner_color', color);
         updateAnalytics();
     }
@@ -1005,13 +1022,11 @@
         document.getElementById('t_language').innerText = langData.language;
     }
 
-    // --- Speech Recognition ---
     function initSpeechRecognition() {
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.continuous = false;
-            recognition.interimResults = false;
 
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
@@ -1042,7 +1057,6 @@
         }
     }
 
-    // --- Permissions ---
     function requestOSNotifications() {
         if ('Notification' in window) {
             Notification.requestPermission().then(permission => {
